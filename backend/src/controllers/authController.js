@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const mediaService = require('../services/mediaService');
 const { successResponse } = require('../utils/apiResponse');
 const config = require('../config/env');
 
@@ -103,7 +104,19 @@ async function getMe(req, res, next) {
 
 async function updateMe(req, res, next) {
   try {
-    const updated = await authService.updateProfile(req.user.id, req.body);
+    const updateData = { ...req.body };
+    
+    // Process uploaded avatar if present
+    if (req.file) {
+      const avatarObj = await mediaService.processAndSaveImage(
+        req.file.buffer,
+        req.file.originalname,
+        'avatars'
+      );
+      updateData.avatarUrl = avatarObj.url;
+    }
+
+    const updated = await authService.updateProfile(req.user.id, updateData);
     return successResponse(res, updated, 'Profile updated successfully');
   } catch (err) {
     next(err);

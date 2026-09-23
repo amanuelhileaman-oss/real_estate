@@ -20,7 +20,7 @@ export default function GoogleAuthButton({ role = 'CUSTOMER', additionalData = {
       };
       
       const user = await loginWithGoogle(payload);
-      addToast('success', 'Google Sign-In Successful', `Welcome, ${user.first_name}!`);
+      addToast(`Welcome, ${user.first_name}!`, 'success');
       
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard');
@@ -31,14 +31,14 @@ export default function GoogleAuthButton({ role = 'CUSTOMER', additionalData = {
       }
     } catch (err) {
       console.error(err);
-      addToast('error', 'Authentication Failed', err.message || 'Could not sign in with Google');
+      addToast(err.message || 'Could not sign in with Google', 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleError = () => {
-    addToast('error', 'Google Sign-In Failed', 'The Google popup was closed or an error occurred.');
+    addToast('The Google popup was closed or an error occurred.', 'error');
   };
 
   return (

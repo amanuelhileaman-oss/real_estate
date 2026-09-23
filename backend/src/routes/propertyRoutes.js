@@ -9,6 +9,7 @@ const {
   createPropertySchema,
   updatePropertySchema,
   statusChangeSchema,
+  availabilityStatusChangeSchema,
   propertyQuerySchema,
   geoRadiusQuerySchema,
   geoBoundsQuerySchema
@@ -51,6 +52,14 @@ router.patch(
   authorizeRoles('AGENT', 'ADMIN'),
   validate(statusChangeSchema),
   propertyController.changeStatus
+);
+
+router.patch(
+  '/:id/availability',
+  authenticate,
+  authorizeRoles('AGENT', 'ADMIN'),
+  validate(availabilityStatusChangeSchema),
+  propertyController.changeAvailabilityStatus
 );
 
 router.delete(

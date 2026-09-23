@@ -73,6 +73,11 @@ export default function PropertyCard({ property, onFavoriteToggle, layout = 'gri
               {property.property_type_name}
             </Badge>
           )}
+          {property.availability_status && property.availability_status !== 'AVAILABLE' && (
+            <Badge variant={property.availability_status === 'SOLD' ? 'rose' : property.availability_status === 'RENTED' ? 'amber' : 'slate'} className="shadow-sm backdrop-blur-md uppercase text-[10px]">
+              {property.availability_status.replace('_', ' ')}
+            </Badge>
+          )}
         </div>
 
         {/* Favorite Button */}

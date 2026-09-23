@@ -62,6 +62,10 @@ async function findProperties({
   // Filter by status (defaults to public visible: ACTIVE, APPROVED, AVAILABLE)
   if (status === 'ACTIVE' || status === 'AVAILABLE' || status === 'APPROVED' || !status) {
     whereClauses.push(`ps.code IN ('ACTIVE', 'APPROVED', 'AVAILABLE')`);
+    // Unless viewing all as admin/agent, exclude sold/rented properties from public search
+    if (!agentId && status !== 'ALL') {
+      whereClauses.push(`p.availability_status NOT IN ('SOLD', 'RENTED', 'UNAVAILABLE')`);
+    }
   } else if (status !== 'ALL') {
     params.push(status.toUpperCase());
     whereClauses.push(`ps.code = $${params.length}`);
@@ -241,6 +245,7 @@ async function findProperties({
       p.bedrooms, p.bathrooms, p.area_sqm, p.lot_size_sqm, p.year_built, p.parking_spaces,
       p.furnished_status, p.features, p.country, p.state_region, p.city, p.subcity_district,
       p.street_address, p.postal_code, p.latitude, p.longitude, p.view_count, p.published_at, p.created_at,
+      p.availability_status,
       pt.code AS property_type_code, pt.name AS property_type_name, pt.icon AS property_type_icon,
       lt.code AS listing_type_code, lt.name AS listing_type_name,
       ps.code AS status_code, ps.name AS status_name,
@@ -283,7 +288,10 @@ async function findProperties({
  * PostGIS Spatial Radius Query: Find active properties within radius km
  */
 async function findWithinRadius({ lat, lng, radiusKm = 25, limit = 50, type, listingType }) {
-  const whereClauses = ["ps.code IN ('ACTIVE', 'APPROVED', 'AVAILABLE')"];
+  const whereClauses = [
+    "ps.code IN ('ACTIVE', 'APPROVED', 'AVAILABLE')",
+    "p.availability_status NOT IN ('SOLD', 'RENTED', 'UNAVAILABLE')"
+  ];
   const params = [lng, lat, radiusKm * 1000];
 
   if (type) {
@@ -300,7 +308,7 @@ async function findWithinRadius({ lat, lng, radiusKm = 25, limit = 50, type, lis
 
   const sql = `
     SELECT 
-      p.id, p.title, p.slug, p.price, p.currency, p.price_period,
+      p.id, p.title, p.slug, p.price, p.currency, p.price_period, p.availability_status,
       p.bedrooms, p.bathrooms, p.area_sqm, p.city, p.street_address,
       p.latitude, p.longitude,
       pt.code AS property_type_code, pt.name AS property_type_name,
@@ -343,6 +351,7 @@ async function findWithinBounds({ minLng, minLat, maxLng, maxLat, limit = 100 })
       SELECT url FROM property_media WHERE property_id = p.id ORDER BY is_primary DESC, sort_order ASC LIMIT 1
     ) pm ON true
     WHERE ps.code IN ('ACTIVE', 'APPROVED', 'AVAILABLE')
+      AND p.availability_status NOT IN ('SOLD', 'RENTED', 'UNAVAILABLE')
       AND p.latitude BETWEEN $2 AND $4
       AND p.longitude BETWEEN $1 AND $3
     LIMIT $5
@@ -656,6 +665,19 @@ async function updateStatus(id, statusCode, rejectionReason = null) {
 }
 
 /**
+ * Change availability status (AVAILABLE, UNDER_OFFER, RESERVED, SOLD, RENTED)
+ */
+async function updateAvailabilityStatus(id, availabilityStatus) {
+  await db.query(
+    `UPDATE properties 
+     SET availability_status = $1, updated_at = NOW() 
+     WHERE id = $2`,
+    [availabilityStatus, id]
+  );
+  return findBySlugOrId(id);
+}
+
+/**
  * Add media asset to property
  */
 async function addMedia(propertyId, mediaItem) {
@@ -743,6 +765,7 @@ module.exports = {
   updateProperty,
   deleteProperty,
   updateStatus,
+  updateAvailabilityStatus,
   addMedia,
   deleteMedia,
   reorderMedia,

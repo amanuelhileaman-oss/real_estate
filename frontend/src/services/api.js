@@ -18,7 +18,10 @@ export function getAccessToken() {
 }
 
 export async function apiRequest(endpoint, options = {}) {
-  const url = endpoint.startsWith('/') ? `/api/v1${endpoint}` : `/api/v1/${endpoint}`;
+  // Use VITE_API_BASE_URL for production (e.g. https://my-backend.onrender.com) 
+  // If not set, it defaults to '' (which uses the local Vite proxy in development)
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  const url = `${baseUrl}${endpoint.startsWith('/') ? '/api/v1' + endpoint : '/api/v1/' + endpoint}`;
 
   const headers = {
     ...options.headers

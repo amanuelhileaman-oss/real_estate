@@ -49,9 +49,10 @@ export const authService = {
   },
 
   async updateProfile(payload) {
+    const isFormData = payload instanceof FormData;
     const res = await apiRequest('/auth/me', {
       method: 'PUT',
-      body: JSON.stringify(payload)
+      body: isFormData ? payload : JSON.stringify(payload)
     });
     return res.data;
   }

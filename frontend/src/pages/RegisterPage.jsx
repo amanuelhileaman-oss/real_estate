@@ -14,23 +14,63 @@ export default function RegisterPage() {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
     agencyName: '',
     licenseNumber: '',
     bio: ''
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email address';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one letter and one number';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (role === 'AGENT') {
+      if (!formData.agencyName.trim()) newErrors.agencyName = 'Agency name is required';
+      if (!formData.licenseNumber.trim()) newErrors.licenseNumber = 'License number is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      addToast('Please fix the errors in the form before submitting.', 'error');
+      return;
+    }
+    
     try {
       setLoading(true);
+      const { confirmPassword, ...submitData } = formData;
       const user = await register({
-        ...formData,
+        ...submitData,
         role
       });
       addToast(`Account created! Welcome, ${user.first_name}.`, 'success');
@@ -92,7 +132,11 @@ export default function RegisterPage() {
                 required
                 icon={User}
                 value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, firstName: e.target.value });
+                  if (errors.firstName) setErrors({ ...errors, firstName: null });
+                }}
+                error={errors.firstName}
                 placeholder="John"
               />
               <Input
@@ -100,7 +144,11 @@ export default function RegisterPage() {
                 required
                 icon={User}
                 value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, lastName: e.target.value });
+                  if (errors.lastName) setErrors({ ...errors, lastName: null });
+                }}
+                error={errors.lastName}
                 placeholder="Doe"
               />
             </div>
@@ -111,19 +159,44 @@ export default function RegisterPage() {
               required
               icon={Mail}
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                if (errors.email) setErrors({ ...errors, email: null });
+              }}
+              error={errors.email}
               placeholder="name@example.com"
             />
 
-            <Input
-              label="Password (min 8 characters)"
-              type="password"
-              required
-              icon={Lock}
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="••••••••"
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Password"
+                type="password"
+                required
+                icon={Lock}
+                value={formData.password}
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value });
+                  if (errors.password) setErrors({ ...errors, password: null });
+                }}
+                error={errors.password}
+                placeholder="••••••••"
+                helperText="Min 8 chars, 1 letter, 1 number"
+              />
+
+              <Input
+                label="Confirm Password"
+                type="password"
+                required
+                icon={Lock}
+                value={formData.confirmPassword}
+                onChange={(e) => {
+                  setFormData({ ...formData, confirmPassword: e.target.value });
+                  if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: null });
+                }}
+                error={errors.confirmPassword}
+                placeholder="••••••••"
+              />
+            </div>
 
             <Input
               label="Phone Number"
@@ -147,14 +220,22 @@ export default function RegisterPage() {
                     label="Agency / Brokerage Name"
                     required
                     value={formData.agencyName}
-                    onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, agencyName: e.target.value });
+                      if (errors.agencyName) setErrors({ ...errors, agencyName: null });
+                    }}
+                    error={errors.agencyName}
                     placeholder="e.g. Austin Premier Estates"
                   />
                   <Input
                     label="Real Estate License #"
                     required
                     value={formData.licenseNumber}
-                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, licenseNumber: e.target.value });
+                      if (errors.licenseNumber) setErrors({ ...errors, licenseNumber: null });
+                    }}
+                    error={errors.licenseNumber}
                     placeholder="e.g. TX-RE-98410"
                   />
                 </div>
@@ -192,7 +273,8 @@ export default function RegisterPage() {
               phone: formData.phone,
               agencyName: formData.agencyName,
               licenseNumber: formData.licenseNumber,
-              bio: formData.bio
+              bio: formData.bio,
+              action: 'register'
             }} 
           />
 

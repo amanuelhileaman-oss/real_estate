@@ -35,6 +35,21 @@ const createPropertySchema = z.object({
     longitude: z.coerce.number({ required_error: 'Longitude is required' }).min(-180, 'Longitude must be between -180 and 180').max(180, 'Longitude must be between -180 and 180'),
     status: z.enum(['DRAFT', 'PENDING', 'PENDING_APPROVAL']).default('PENDING_APPROVAL')
   })
+}).superRefine((data, ctx) => {
+  if (data.body.listingTypeCode === 'FOR_RENT' && !data.body.pricePeriod) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['body', 'pricePeriod'],
+      message: 'Rental terms (price period) are required for FOR_RENT properties'
+    });
+  }
+  if (data.body.listingTypeCode === 'FOR_SALE' && data.body.pricePeriod) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['body', 'pricePeriod'],
+      message: 'Sale properties should not have a rental price period'
+    });
+  }
 });
 
 const updatePropertySchema = z.object({
@@ -71,6 +86,21 @@ const updatePropertySchema = z.object({
     latitude: z.coerce.number().min(-90).max(90).optional(),
     longitude: z.coerce.number().min(-180).max(180).optional()
   })
+}).superRefine((data, ctx) => {
+  if (data.body.listingTypeCode === 'FOR_RENT' && data.body.pricePeriod === null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['body', 'pricePeriod'],
+      message: 'Rental terms (price period) are required for FOR_RENT properties'
+    });
+  }
+  if (data.body.listingTypeCode === 'FOR_SALE' && data.body.pricePeriod) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['body', 'pricePeriod'],
+      message: 'Sale properties should not have a rental price period'
+    });
+  }
 });
 
 const statusChangeSchema = z.object({
@@ -80,6 +110,15 @@ const statusChangeSchema = z.object({
   body: z.object({
     status: z.string().min(1, 'Status is required'),
     rejectionReason: z.string().optional().nullable()
+  })
+});
+
+const availabilityStatusChangeSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Invalid property ID')
+  }),
+  body: z.object({
+    availabilityStatus: z.enum(['AVAILABLE', 'UNDER_OFFER', 'RESERVED', 'SOLD', 'RENTED', 'UNAVAILABLE'])
   })
 });
 
@@ -150,6 +189,7 @@ module.exports = {
   createPropertySchema,
   updatePropertySchema,
   statusChangeSchema,
+  availabilityStatusChangeSchema,
   propertyQuerySchema,
   geoRadiusQuerySchema,
   geoBoundsQuerySchema

@@ -127,6 +127,8 @@ export default function PropertyDetailPage() {
       ? JSON.parse(property.features || '[]')
       : [];
 
+  const isAvailable = !['SOLD', 'RENTED', 'UNAVAILABLE'].includes(property.availability_status);
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Breadcrumbs */}
@@ -160,6 +162,11 @@ export default function PropertyDetailPage() {
             {property.status_code !== 'ACTIVE' && (
               <Badge variant="amber" className="bg-amber-400 text-slate-950 font-bold shadow text-xs">
                 Status: {property.status_name}
+              </Badge>
+            )}
+            {property.availability_status && property.availability_status !== 'AVAILABLE' && (
+              <Badge variant={property.availability_status === 'SOLD' ? 'rose' : property.availability_status === 'RENTED' ? 'amber' : 'slate'} className="font-bold shadow text-xs uppercase tracking-wide">
+                {property.availability_status.replace('_', ' ')}
               </Badge>
             )}
           </div>
@@ -364,8 +371,16 @@ export default function PropertyDetailPage() {
                 {formatCurrency(property.price, property.currency)}
                 {pricePeriodSuffix && <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{pricePeriodSuffix}</span>}
               </div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                {isRent ? 'Available for Lease & Move-in' : 'Available for Purchase & Escrow'}
+              <div className="text-xs font-semibold mt-0.5 flex flex-col gap-1">
+                {isRent ? (
+                  <span className={isAvailable ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}>
+                    {isAvailable ? 'Available for Lease & Move-in' : `Currently ${property.availability_status}`}
+                  </span>
+                ) : (
+                  <span className={isAvailable ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>
+                    {isAvailable ? 'Available for Purchase & Escrow' : `Currently ${property.availability_status}`}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -374,21 +389,23 @@ export default function PropertyDetailPage() {
               <Button
                 variant="primary"
                 size="lg"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/25"
+                disabled={!isAvailable}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setRentalModalOpen(true)}
               >
                 <FileText className="w-4 h-4" />
-                Apply to Rent / Lease
+                {isAvailable ? 'Apply to Rent / Lease' : 'Unavailable for Rent'}
               </Button>
             ) : (
               <Button
                 variant="primary"
                 size="lg"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/25"
+                disabled={!isAvailable}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => setBuyOfferModalOpen(true)}
               >
                 <DollarSign className="w-4 h-4" />
-                Make an Offer to Buy
+                {isAvailable ? 'Make an Offer to Buy' : 'Unavailable for Purchase'}
               </Button>
             )}
 
@@ -405,7 +422,8 @@ export default function PropertyDetailPage() {
             <Button
               variant="outline"
               size="md"
-              className="w-full"
+              disabled={!isAvailable}
+              className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => setViewingModalOpen(true)}
             >
               <Calendar className="w-4 h-4" />

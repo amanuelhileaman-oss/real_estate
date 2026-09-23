@@ -65,7 +65,7 @@ export default function DemoAccountBanner() {
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
           >
-            Super Admin
+            Admin
           </button>
           <button
             onClick={() => handleSwitch('AGENT')}
@@ -75,7 +75,7 @@ export default function DemoAccountBanner() {
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
           >
-            Agent Sarah
+            Agent
           </button>
           <button
             onClick={() => handleSwitch('CUSTOMER')}
@@ -85,7 +85,7 @@ export default function DemoAccountBanner() {
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             }`}
           >
-            Customer Alex
+            Customer
           </button>
           {user && (
             <button

@@ -101,7 +101,7 @@ async function login(email, password, deviceInfo = 'Web Browser') {
   };
 }
 
-async function googleAuth({ credential, role, phone, agencyName, licenseNumber, bio }, deviceInfo = 'Web Browser') {
+async function googleAuth({ credential, role, phone, agencyName, licenseNumber, bio, action }, deviceInfo = 'Web Browser') {
   if (!credential) {
     throw new UnauthorizedError('Google credential is required.');
   }
@@ -118,8 +118,14 @@ async function googleAuth({ credential, role, phone, agencyName, licenseNumber, 
     // Check if email exists to link account
     user = await userRepository.findByEmail(normalizedEmail);
     if (user) {
+      if (action === 'register') {
+        throw new ConflictError('An account with this email already exists. Please sign in instead.');
+      }
       user = await userRepository.linkGoogleAccount(user.id, payload.sub);
     } else {
+      if (action === 'login') {
+        throw new UnauthorizedError('No account found for this Google email. Please sign up first.');
+      }
       // New user signup
       if (role === 'AGENT' && (!agencyName || !licenseNumber)) {
         throw new BadRequestError('Agency Name and License Number are required for Agent registration.');

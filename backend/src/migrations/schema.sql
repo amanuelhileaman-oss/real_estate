@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS properties (
     location GEOGRAPHY(POINT, 4326) NOT NULL,
     
     -- Administrative & engagement fields
+    availability_status VARCHAR(30) DEFAULT 'AVAILABLE' CHECK (availability_status IN ('AVAILABLE', 'UNDER_OFFER', 'RESERVED', 'SOLD', 'RENTED', 'UNAVAILABLE')),
     rejection_reason TEXT,
     view_count INTEGER NOT NULL DEFAULT 0,
     published_at TIMESTAMPTZ,

@@ -16,6 +16,9 @@ module.exports = {
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'AdminSecure2026!',
   ADMIN_FIRST_NAME: process.env.ADMIN_FIRST_NAME || 'Platform',
   ADMIN_LAST_NAME: process.env.ADMIN_LAST_NAME || 'Admin',
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || ''
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || ''
 };
 

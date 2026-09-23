@@ -174,7 +174,7 @@ export default function LoginPage() {
             <div className="h-px bg-slate-200 flex-1"></div>
           </div>
           
-          <GoogleAuthButton role="CUSTOMER" text="signin_with" />
+          <GoogleAuthButton role="CUSTOMER" text="signin_with" additionalData={{ action: 'login' }} />
 
           <div className="mt-6 text-center text-xs text-slate-500">
             Don't have an account?{' '}

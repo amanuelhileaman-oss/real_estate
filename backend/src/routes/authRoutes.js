@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const authController = require('../controllers/authController');
 const validate = require('../middlewares/validateMiddleware');
 const { authenticate } = require('../middlewares/authMiddleware');
+const upload = require('../config/multer');
 const { registerSchema, loginSchema, updateProfileSchema } = require('../validators/authValidators');
 
 const authLimiter = rateLimit({
@@ -24,6 +25,6 @@ router.post('/google', authController.googleAuth);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
 router.get('/me', authenticate, authController.getMe);
-router.put('/me', authenticate, validate(updateProfileSchema), authController.updateMe);
+router.put('/me', authenticate, upload.single('avatar'), validate(updateProfileSchema), authController.updateMe);
 
 module.exports = router;

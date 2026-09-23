@@ -21,12 +21,12 @@ import {
 export default function CustomerProfilePage() {
   const { user, refreshUser } = useAuth();
   const { addToast } = useToast();
-
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     phone: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    avatarFile: null
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,7 +36,8 @@ export default function CustomerProfilePage() {
         firstName: user.first_name || '',
         lastName: user.last_name || '',
         phone: user.phone || '',
-        avatarUrl: user.avatar_url || ''
+        avatarUrl: user.avatar_url || '',
+        avatarFile: null
       });
     }
   }, [user]);
@@ -50,12 +51,22 @@ export default function CustomerProfilePage() {
 
     try {
       setSubmitting(true);
-      await authService.updateProfile({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        phone: formData.phone.trim() || undefined,
-        avatarUrl: formData.avatarUrl.trim() || undefined
-      });
+      let payload;
+      if (formData.avatarFile) {
+        payload = new FormData();
+        payload.append('firstName', formData.firstName.trim());
+        payload.append('lastName', formData.lastName.trim());
+        if (formData.phone.trim()) payload.append('phone', formData.phone.trim());
+        payload.append('avatar', formData.avatarFile);
+      } else {
+        payload = {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          phone: formData.phone.trim() || undefined
+        };
+      }
+
+      await authService.updateProfile(payload);
       await refreshUser();
       addToast('Profile updated successfully!', 'success');
     } catch (err) {
@@ -74,9 +85,9 @@ export default function CustomerProfilePage() {
         {/* User Card Header */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-5">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl shadow-md shrink-0">
-            {formData.avatarUrl ? (
+            {formData.avatarUrl || formData.avatarFile ? (
               <img
-                src={formData.avatarUrl}
+                src={formData.avatarFile ? URL.createObjectURL(formData.avatarFile) : formData.avatarUrl}
                 alt="Avatar"
                 className="w-full h-full object-cover rounded-2xl"
               />
@@ -126,14 +137,22 @@ export default function CustomerProfilePage() {
             helperText="Used by listing agents to confirm viewing appointments."
           />
 
-          <Input
-            label="Avatar Photo URL"
-            type="url"
-            value={formData.avatarUrl}
-            onChange={(e) => setFormData((prev) => ({ ...prev, avatarUrl: e.target.value }))}
-            placeholder="https://images.unsplash.com/..."
-            helperText="Direct image link for your profile picture."
-          />
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Avatar Photo
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setFormData((prev) => ({ ...prev, avatarFile: e.target.files[0] }));
+                }
+              }}
+              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Upload a direct image file for your profile picture.</p>
+          </div>
 
           {/* Email (Read Only) */}
           <div>

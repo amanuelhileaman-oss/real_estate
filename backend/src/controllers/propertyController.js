@@ -192,6 +192,37 @@ async function changeStatus(req, res, next) {
   }
 }
 
+async function changeAvailabilityStatus(req, res, next) {
+  try {
+    const property = await propertyRepository.findBySlugOrId(req.params.id);
+    if (!property) throw new NotFoundError('Property not found');
+
+    if (req.user.role !== 'ADMIN' && property.agent_id !== req.user.id) {
+      throw new ForbiddenError('You are not authorized to update this listing availability status.');
+    }
+
+    const { availabilityStatus } = req.body;
+    const targetStatus = (availabilityStatus || '').toUpperCase().trim();
+
+    const allowedStatuses = ['AVAILABLE', 'UNDER_OFFER', 'RESERVED', 'SOLD', 'RENTED', 'UNAVAILABLE'];
+    if (!allowedStatuses.includes(targetStatus)) {
+      throw new BadRequestError(`Invalid availability status. Must be one of: ${allowedStatuses.join(', ')}`);
+    }
+
+    if (targetStatus === 'SOLD' && property.listing_type_code !== 'FOR_SALE') {
+      throw new BadRequestError('Only FOR_SALE properties can be marked as SOLD.');
+    }
+    if (targetStatus === 'RENTED' && property.listing_type_code !== 'FOR_RENT') {
+      throw new BadRequestError('Only FOR_RENT properties can be marked as RENTED.');
+    }
+
+    const updated = await propertyRepository.updateAvailabilityStatus(property.id, targetStatus);
+    return successResponse(res, updated, `Property availability marked as ${targetStatus}`);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function deleteProperty(req, res, next) {
   try {
     const property = await propertyRepository.findBySlugOrId(req.params.id);
@@ -300,6 +331,7 @@ module.exports = {
   updateProperty,
   submitForApproval,
   changeStatus,
+  changeAvailabilityStatus,
   deleteProperty,
   uploadMedia,
   deleteMedia,

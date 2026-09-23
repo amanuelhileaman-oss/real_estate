@@ -37,7 +37,8 @@ export default function AgentProfilePage() {
     officePhone: '',
     officeAddress: '',
     websiteUrl: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    avatarFile: null
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -52,7 +53,8 @@ export default function AgentProfilePage() {
         officePhone: user.office_phone || '',
         officeAddress: user.office_address || '',
         websiteUrl: user.website_url || '',
-        avatarUrl: user.avatar_url || ''
+        avatarUrl: user.avatar_url || '',
+        avatarFile: null
       });
     }
   }, [user]);
@@ -65,18 +67,32 @@ export default function AgentProfilePage() {
     }
 
     try {
-      setSubmitting(true);
-      await authService.updateProfile({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        phone: formData.phone.trim() || undefined,
-        agencyName: formData.agencyName.trim() || undefined,
-        bio: formData.bio.trim() || undefined,
-        officePhone: formData.officePhone.trim() || undefined,
-        officeAddress: formData.officeAddress.trim() || undefined,
-        websiteUrl: formData.websiteUrl.trim() || undefined,
-        avatarUrl: formData.avatarUrl.trim() || undefined
-      });
+      let payload;
+      if (formData.avatarFile) {
+        payload = new FormData();
+        payload.append('firstName', formData.firstName.trim());
+        payload.append('lastName', formData.lastName.trim());
+        if (formData.phone.trim()) payload.append('phone', formData.phone.trim());
+        if (formData.agencyName.trim()) payload.append('agencyName', formData.agencyName.trim());
+        if (formData.bio.trim()) payload.append('bio', formData.bio.trim());
+        if (formData.officePhone.trim()) payload.append('officePhone', formData.officePhone.trim());
+        if (formData.officeAddress.trim()) payload.append('officeAddress', formData.officeAddress.trim());
+        if (formData.websiteUrl.trim()) payload.append('websiteUrl', formData.websiteUrl.trim());
+        payload.append('avatar', formData.avatarFile);
+      } else {
+        payload = {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          phone: formData.phone.trim() || undefined,
+          agencyName: formData.agencyName.trim() || undefined,
+          bio: formData.bio.trim() || undefined,
+          officePhone: formData.officePhone.trim() || undefined,
+          officeAddress: formData.officeAddress.trim() || undefined,
+          websiteUrl: formData.websiteUrl.trim() || undefined
+        };
+      }
+
+      await authService.updateProfile(payload);
       await refreshUser();
       addToast('Agent profile successfully updated!', 'success');
     } catch (err) {
@@ -98,9 +114,9 @@ export default function AgentProfilePage() {
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl shadow-md shrink-0">
-              {formData.avatarUrl ? (
+              {formData.avatarUrl || formData.avatarFile ? (
                 <img
-                  src={formData.avatarUrl}
+                  src={formData.avatarFile ? URL.createObjectURL(formData.avatarFile) : formData.avatarUrl}
                   alt="Avatar"
                   className="w-full h-full object-cover rounded-2xl"
                 />
@@ -171,13 +187,21 @@ export default function AgentProfilePage() {
                 onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                 placeholder="e.g. +1 (512) 555-0144"
               />
-              <Input
-                label="Avatar Image URL"
-                type="url"
-                value={formData.avatarUrl}
-                onChange={(e) => setFormData((prev) => ({ ...prev, avatarUrl: e.target.value }))}
-                placeholder="https://images.unsplash.com/..."
-              />
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Avatar Photo
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setFormData((prev) => ({ ...prev, avatarFile: e.target.files[0] }));
+                    }
+                  }}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
             </div>
           </div>
 

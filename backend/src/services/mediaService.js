@@ -1,56 +1,59 @@
 const sharp = require('sharp');
-const path = require('path');
-const fs = require('fs').promises;
-const crypto = require('crypto');
+const cloudinary = require('cloudinary').v2;
+const config = require('../config/env');
 
-const UPLOADS_DIR = path.resolve(__dirname, '../../public/uploads/properties');
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: config.CLOUDINARY_CLOUD_NAME,
+  api_key: config.CLOUDINARY_API_KEY,
+  api_secret: config.CLOUDINARY_API_SECRET
+});
 
-// Ensure directory exists
-async function ensureUploadDir() {
-  await fs.mkdir(UPLOADS_DIR, { recursive: true });
+function uploadToCloudinary(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'image'
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    uploadStream.end(buffer);
+  });
 }
 
-async function processAndSaveImage(fileBuffer, originalName) {
-  await ensureUploadDir();
-
-  const fileId = crypto.randomUUID();
-  const standardFileName = `${fileId}.webp`;
-  const thumbFileName = `${fileId}_thumb.webp`;
-
-  const standardFilePath = path.join(UPLOADS_DIR, standardFileName);
-  const thumbFilePath = path.join(UPLOADS_DIR, thumbFileName);
-
+async function processAndSaveImage(fileBuffer, originalName, folder = 'properties') {
   // 1. Process Standard (High-Def)
-  await sharp(fileBuffer)
+  const processedBuffer = await sharp(fileBuffer)
     .rotate() // auto-orient by EXIF
     .resize(1600, 1200, { fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 82 })
-    .toFile(standardFilePath);
+    .toBuffer();
 
-  // 2. Process Thumbnail
-  await sharp(fileBuffer)
-    .rotate()
-    .resize(480, 360, { fit: 'cover' })
-    .webp({ quality: 78 })
-    .toFile(thumbFilePath);
+  // 2. Upload to Cloudinary
+  const result = await uploadToCloudinary(processedBuffer, `realestate/${folder}`);
+
+  // Cloudinary allows generating thumbnails dynamically via URL parameters
+  const thumbnailUrl = result.secure_url.replace('/upload/', '/upload/c_fill,h_360,w_480/q_78/');
 
   return {
-    fileKey: fileId,
-    url: `/uploads/properties/${standardFileName}`,
-    thumbnailUrl: `/uploads/properties/${thumbFileName}`,
+    fileKey: result.public_id, 
+    url: result.secure_url,
+    thumbnailUrl: thumbnailUrl,
     originalName
   };
 }
 
-async function deleteImageFiles(fileKey) {
+async function deleteImageFiles(fileKey, folder = 'properties') {
   try {
-    const standardFilePath = path.join(UPLOADS_DIR, `${fileKey}.webp`);
-    const thumbFilePath = path.join(UPLOADS_DIR, `${fileKey}_thumb.webp`);
-
-    await fs.unlink(standardFilePath).catch(() => {});
-    await fs.unlink(thumbFilePath).catch(() => {});
+    if (fileKey) {
+      await cloudinary.uploader.destroy(fileKey);
+    }
   } catch (err) {
-    console.error('Error removing image files:', err);
+    console.error('Error removing image from Cloudinary:', err);
   }
 }
 

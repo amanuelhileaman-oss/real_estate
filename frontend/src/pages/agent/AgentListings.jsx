@@ -59,6 +59,16 @@ export default function AgentListings() {
     }
   };
 
+  const handleAvailabilityChange = async (propertyId, newAvailability) => {
+    try {
+      await propertyService.changeAvailabilityStatus(propertyId, newAvailability);
+      addToast(`Property marked as ${newAvailability}`, 'success');
+      loadListings();
+    } catch (err) {
+      addToast(err.message, 'error');
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!deletingProperty) return;
     setDeleteLoading(true);
@@ -171,19 +181,26 @@ export default function AgentListings() {
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <Badge
-                          variant={
-                            item.status_code === 'ACTIVE'
-                              ? 'emerald'
-                              : item.status_code === 'PENDING_APPROVAL'
-                              ? 'amber'
-                              : item.status_code === 'REJECTED'
-                              ? 'rose'
-                              : 'default'
-                          }
-                        >
-                          {item.status_name}
-                        </Badge>
+                        <div className="flex flex-col gap-1 items-start">
+                          <Badge
+                            variant={
+                              item.status_code === 'ACTIVE'
+                                ? 'emerald'
+                                : item.status_code === 'PENDING_APPROVAL'
+                                ? 'amber'
+                                : item.status_code === 'REJECTED'
+                                ? 'rose'
+                                : 'default'
+                            }
+                          >
+                            {item.status_name}
+                          </Badge>
+                          {item.availability_status && item.availability_status !== 'AVAILABLE' && (
+                            <Badge variant={item.availability_status === 'SOLD' ? 'rose' : item.availability_status === 'RENTED' ? 'amber' : 'slate'} className="text-[10px] uppercase">
+                              {item.availability_status.replace('_', ' ')}
+                            </Badge>
+                          )}
+                        </div>
                       </td>
 
                       <td className="py-3.5 px-4 text-slate-400">
@@ -216,20 +233,24 @@ export default function AgentListings() {
                             <ExternalLink className="w-4 h-4" />
                           </Link>
 
-                          {item.status_code === 'ACTIVE' && (
+                          {item.status_code === 'ACTIVE' && item.availability_status === 'AVAILABLE' && (
                             <>
-                              <button
-                                onClick={() => handleStatusChange(item.id, 'SOLD')}
-                                className="px-2 py-1 text-[10px] font-bold rounded bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 transition-colors"
-                              >
-                                Mark Sold
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(item.id, 'RENTED')}
-                                className="px-2 py-1 text-[10px] font-bold rounded bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 transition-colors"
-                              >
-                                Mark Rented
-                              </button>
+                              {item.listing_type_code === 'FOR_SALE' && (
+                                <button
+                                  onClick={() => handleAvailabilityChange(item.id, 'SOLD')}
+                                  className="px-2 py-1 text-[10px] font-bold rounded bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 transition-colors"
+                                >
+                                  Mark Sold
+                                </button>
+                              )}
+                              {item.listing_type_code === 'FOR_RENT' && (
+                                <button
+                                  onClick={() => handleAvailabilityChange(item.id, 'RENTED')}
+                                  className="px-2 py-1 text-[10px] font-bold rounded bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 transition-colors"
+                                >
+                                  Mark Rented
+                                </button>
+                              )}
                             </>
                           )}
 

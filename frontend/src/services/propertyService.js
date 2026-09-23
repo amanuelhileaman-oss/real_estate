@@ -57,6 +57,14 @@ export const propertyService = {
     return res.data;
   },
 
+  async changeAvailabilityStatus(id, availabilityStatus) {
+    const res = await apiRequest(`/properties/${id}/availability`, {
+      method: 'PATCH',
+      body: JSON.stringify({ availabilityStatus })
+    });
+    return res.data;
+  },
+
   async deleteProperty(id) {
     const res = await apiRequest(`/properties/${id}`, {
       method: 'DELETE'
