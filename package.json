@@ -1,0 +1,14 @@
+{
+  "name": "terraprime-realestate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TerraPrime Modern Real Estate Platform",
+  "scripts": {
+    "start:db": "LD_LIBRARY_PATH=/home/amanuel/postgis_extracted/usr/lib/x86_64-linux-gnu /usr/lib/postgresql/18/bin/pg_ctl -D /home/amanuel/realestate_pgdata -l /home/amanuel/realestate_pgdata/logfile start",
+    "status:db": "/usr/lib/postgresql/18/bin/pg_ctl -D /home/amanuel/realestate_pgdata status",
+    "stop:db": "/usr/lib/postgresql/18/bin/pg_ctl -D /home/amanuel/realestate_pgdata stop",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "test:e2e": "node backend/scripts/e2e-verification.js"
+  }
+}
