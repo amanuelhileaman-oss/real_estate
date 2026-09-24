@@ -15,6 +15,7 @@ import PropertyCatalogPage from './pages/PropertyCatalogPage';
 import PropertyDetailPage from './pages/PropertyDetailPage';
 import AgentDirectoryPage from './pages/AgentDirectoryPage';
 import AgentPublicProfilePage from './pages/AgentPublicProfilePage';
+import CustomerDirectoryPage from './pages/CustomerDirectoryPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -65,6 +66,7 @@ export default function App() {
                 <Route path="/agents" element={<AgentDirectoryPage />} />
                 <Route path="/agents/:id" element={<AgentPublicProfilePage />} />
                 <Route path="/agents/profile/:id" element={<AgentPublicProfilePage />} />
+                <Route path="/customers" element={<CustomerDirectoryPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
               </Route>

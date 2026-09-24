@@ -4,15 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
-import { Building2, Mail, Lock, KeyRound, ShieldCheck, Briefcase, UserCheck, Eye, EyeOff } from 'lucide-react';
-import { DEMO_ACCOUNTS } from '../utils/constants';
+import { Building2, Mail, Lock, Eye, EyeOff, User, Briefcase } from 'lucide-react';
 import GoogleAuthButton from '../components/auth/GoogleAuthButton';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [role, setRole] = useState('CUSTOMER');
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
@@ -44,16 +43,6 @@ export default function LoginPage() {
     }
   };
 
-  // Clicking a role card autofills the Email and Password fields
-  const handleSelectRole = (role) => {
-    const creds = DEMO_ACCOUNTS[role];
-    if (creds) {
-      setSelectedRole(role);
-      setEmail(creds.email);
-      setPassword(creds.password);
-      addToast(`Filled ${role} credentials (${creds.email}). Click Sign In to continue.`, 'info');
-    }
-  };
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -71,58 +60,30 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Quick Role Autofill Cards */}
-        <div className="bg-slate-900 rounded-2xl p-4 text-white shadow-xl border border-slate-800 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-300 uppercase tracking-wider">
-              <KeyRound className="w-4 h-4 text-amber-400" />
-              <span>Role Presets (Click to Fill):</span>
-            </div>
-            <span className="text-[10px] text-slate-400">Click role to populate form</span>
-          </div>
 
-          <div className="grid grid-cols-2 gap-2">
-
-            <button
-              type="button"
-              onClick={() => handleSelectRole('AGENT')}
-              className={`p-2.5 rounded-xl text-left transition-all border ${
-                selectedRole === 'AGENT'
-                  ? 'bg-blue-950/80 border-blue-400 ring-2 ring-blue-500/40'
-                  : 'bg-slate-800 hover:bg-slate-700/80 border-slate-700 hover:border-blue-500/50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <Briefcase className="w-4 h-4 text-blue-400" />
-                {selectedRole === 'AGENT' && (
-                  <span className="text-[8px] bg-blue-500 text-slate-950 font-extrabold px-1 rounded">FILLED</span>
-                )}
-              </div>
-              <div className="text-[11px] font-bold text-slate-200">Agent Demo</div>
-              <div className="text-[10px] text-blue-300 font-medium">Sarah J.</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectRole('CUSTOMER')}
-              className={`p-2.5 rounded-xl text-left transition-all border ${
-                selectedRole === 'CUSTOMER'
-                  ? 'bg-indigo-950/80 border-indigo-400 ring-2 ring-indigo-500/40'
-                  : 'bg-slate-800 hover:bg-slate-700/80 border-slate-700 hover:border-indigo-500/50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <UserCheck className="w-4 h-4 text-indigo-400" />
-                {selectedRole === 'CUSTOMER' && (
-                  <span className="text-[8px] bg-indigo-500 text-slate-950 font-extrabold px-1 rounded">FILLED</span>
-                )}
-              </div>
-              <div className="text-[11px] font-bold text-slate-200">Customer Demo</div>
-              <div className="text-[10px] text-indigo-300 font-medium">Alex M.</div>
-            </button>
-          </div>
+        {/* Role Toggle Selector */}
+        <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-200/80 rounded-2xl">
+          <button
+            type="button"
+            onClick={() => setRole('CUSTOMER')}
+            className={`py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              role === 'CUSTOMER' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <User className="w-4 h-4 text-indigo-600" />
+            <span>I am a Buyer / Renter</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole('AGENT')}
+            className={`py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+              role === 'AGENT' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Briefcase className="w-4 h-4 text-blue-600" />
+            <span>I am a Licensed Agent</span>
+          </button>
         </div>
-
 
         {/* Login Form */}
         <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
@@ -135,7 +96,6 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setSelectedRole(null);
               }}
               placeholder="name@example.com"
             />
@@ -149,7 +109,6 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setSelectedRole(null);
                 }}
                 placeholder="••••••••"
               />
@@ -174,7 +133,7 @@ export default function LoginPage() {
             <div className="h-px bg-slate-200 flex-1"></div>
           </div>
           
-          <GoogleAuthButton role="CUSTOMER" text="signin_with" additionalData={{ action: 'login' }} />
+          <GoogleAuthButton role={role} text="signin_with" additionalData={{ action: 'login' }} />
 
           <div className="mt-6 text-center text-xs text-slate-500">
             Don't have an account?{' '}

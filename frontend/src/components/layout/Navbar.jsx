@@ -81,6 +81,17 @@ export default function Navbar() {
             <Users className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             Agents
           </Link>
+          <Link
+            to="/customers"
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+              isActive('/customers')
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Users className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            Customers
+          </Link>
         </nav>
 
         {/* Right Action Buttons */}
@@ -280,6 +291,13 @@ export default function Navbar() {
             className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
           >
             Agents Directory
+          </Link>
+          <Link
+            to="/customers"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Customers Directory
           </Link>
 
           {isAuthenticated ? (

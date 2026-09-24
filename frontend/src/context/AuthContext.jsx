@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
-import { DEMO_ACCOUNTS } from '../utils/constants';
 import { getAccessToken } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -46,11 +45,6 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const switchDemoAccount = async (role) => {
-    const creds = DEMO_ACCOUNTS[role];
-    if (!creds) throw new Error(`Unknown role ${role}`);
-    return login(creds.email, creds.password);
-  };
 
   const refreshUser = async () => {
     try {
@@ -80,7 +74,6 @@ export function AuthProvider({ children }) {
         loginWithGoogle,
         register,
         logout,
-        switchDemoAccount,
         refreshUser
       }}
     >

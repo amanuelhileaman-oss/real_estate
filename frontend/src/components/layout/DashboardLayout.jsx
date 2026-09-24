@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import DemoAccountBanner from '../common/DemoAccountBanner';
 import NotificationDropdown from '../common/NotificationDropdown';
 import ThemeSelector from '../common/ThemeSelector';
 import {
@@ -75,8 +74,6 @@ export default function DashboardLayout({ children, title, subtitle }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
-      <DemoAccountBanner />
-
       <div className="flex-1 flex overflow-hidden">
         {/* Mobile backdrop */}
         {sidebarOpen && (
