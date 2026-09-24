@@ -46,7 +46,7 @@ export async function apiRequest(endpoint, options = {}) {
   if (response.status === 401 && !options._retry && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh-token')) {
     options._retry = true;
     try {
-      const refreshRes = await fetch('/api/v1/auth/refresh-token', {
+      const refreshRes = await fetch(`${baseUrl}/api/v1/auth/refresh-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
