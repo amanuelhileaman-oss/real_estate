@@ -268,7 +268,7 @@ export default function RegisterPage() {
           
           <GoogleAuthButton 
             role={role} 
-            text="signup_with" 
+            text="Sign up with Google" 
             additionalData={{
               phone: formData.phone,
               agencyName: formData.agencyName,

@@ -133,7 +133,7 @@ export default function LoginPage() {
             <div className="h-px bg-slate-200 flex-1"></div>
           </div>
           
-          <GoogleAuthButton role={role} text="signin_with" additionalData={{ action: 'login' }} />
+          <GoogleAuthButton role={role} text="Sign in with Google" additionalData={{ action: 'login' }} />
 
           <div className="mt-6 text-center text-xs text-slate-500">
             Don't have an account?{' '}
