@@ -21,7 +21,8 @@ import {
   XCircle,
   FileBadge,
   Pencil,
-  Trash2
+  Trash2,
+  Mail
 } from 'lucide-react';
 import EditUserModal from '../../components/admin/EditUserModal';
 import ConfirmDeleteModal from '../../components/common/ConfirmDeleteModal';
