@@ -20,7 +20,9 @@ import {
   Check,
   CheckCheck,
   X,
-  Sparkles
+  Sparkles,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 export default function ChatPage() {
@@ -35,6 +37,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingMessageId, setEditingMessageId] = useState(null);
 
   // New Chat Modal state
   const [newChatModalOpen, setNewChatModalOpen] = useState(false);
@@ -149,6 +152,48 @@ export default function ChatPage() {
       setSending(false);
     }
   };
+
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    try {
+      await chatService.deleteMessage(activeConversation.id, msgId);
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+      addToast('Message deleted', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to delete message', 'error');
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e?.preventDefault();
+    if (!newMessageText.trim() || !activeConversation || !editingMessageId || sending) return;
+
+    const text = newMessageText.trim();
+    setSending(true);
+
+    try {
+      const updated = await chatService.editMessage(activeConversation.id, editingMessageId, text);
+      setMessages((prev) => prev.map((m) => (m.id === editingMessageId ? { ...m, message: updated.message } : m)));
+      setNewMessageText('');
+      setEditingMessageId(null);
+      addToast('Message updated', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to update message', 'error');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleEditClick = (msg) => {
+    setEditingMessageId(msg.id);
+    setNewMessageText(msg.message);
+  };
+
+  const cancelEdit = () => {
+    setEditingMessageId(null);
+    setNewMessageText('');
+  };
+
 
   const openNewChatModal = async () => {
     setNewChatModalOpen(true);
@@ -403,26 +448,49 @@ export default function ChatPage() {
                         </div>
                       )}
 
-                      <div
-                        className={`max-w-[75%] sm:max-w-md rounded-2xl px-4 py-2.5 text-xs shadow-xs space-y-1 ${
-                          isMine
-                            ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-br-xs'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-xs'
-                        }`}
-                      >
-                        {!isMine && (
-                          <div className="font-bold text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">
-                            {m.sender_first_name} ({m.sender_role})
-                          </div>
-                        )}
-                        <p className="whitespace-pre-wrap leading-relaxed">{m.message}</p>
+                      <div className="flex flex-col gap-1 items-end">
                         <div
-                          className={`text-[9px] flex items-center justify-end gap-1 ${
-                            isMine ? 'text-blue-100/80' : 'text-slate-400'
+                          className={`max-w-[75%] sm:max-w-md rounded-2xl px-4 py-2.5 text-xs shadow-xs space-y-1 group relative ${
+                            isMine
+                              ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-br-xs'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-xs'
                           }`}
                         >
-                          <span>{formatDate(m.created_at)}</span>
-                          {isMine && (m.is_read ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />)}
+                          {!isMine && (
+                            <div className="font-bold text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">
+                              {m.sender_first_name} ({m.sender_role})
+                            </div>
+                          )}
+                          
+                          {/* Edit/Delete Actions (Hover) */}
+                          {isMine && (
+                            <div className="absolute -left-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+                              <button
+                                onClick={() => handleEditClick(m)}
+                                className="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full shadow-sm"
+                                title="Edit"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMessage(m.id)}
+                                className="p-1.5 bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900/80 text-red-600 dark:text-red-400 rounded-full shadow-sm"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+
+                          <p className="whitespace-pre-wrap leading-relaxed">{m.message}</p>
+                          <div
+                            className={`text-[9px] flex items-center justify-end gap-1 ${
+                              isMine ? 'text-blue-100/80' : 'text-slate-400'
+                            }`}
+                          >
+                            <span>{formatDate(m.created_at)}</span>
+                            {isMine && (m.is_read ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />)}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -433,24 +501,37 @@ export default function ChatPage() {
             </div>
 
             {/* Input Composer */}
-            <form onSubmit={handleSendMessage} className="p-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
-              <input
-                type="text"
-                value={newMessageText}
-                onChange={(e) => setNewMessageText(e.target.value)}
-                placeholder="Type your message..."
-                disabled={sending}
-                className="flex-1 px-4 py-2.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={!newMessageText.trim() || sending}
-                className="p-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white shadow-md shadow-blue-500/25 transition-all cursor-pointer"
-                title="Send message"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+            <div className="border-t border-slate-200 dark:border-slate-800 p-3.5 flex flex-col gap-2 relative">
+              {editingMessageId && (
+                <div className="absolute -top-10 left-0 right-0 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-4 py-2 text-xs flex items-center justify-between border-t border-amber-200 dark:border-amber-800/50 z-10">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Pencil className="w-3.5 h-3.5" />
+                    Editing message...
+                  </div>
+                  <button onClick={cancelEdit} className="hover:text-amber-900 dark:hover:text-amber-200 p-1">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <form onSubmit={editingMessageId ? handleEditSubmit : handleSendMessage} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newMessageText}
+                  onChange={(e) => setNewMessageText(e.target.value)}
+                  placeholder={editingMessageId ? "Edit your message..." : "Type your message..."}
+                  disabled={sending}
+                  className="flex-1 px-4 py-2.5 rounded-2xl text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50"
+                />
+                <button
+                  type="submit"
+                  disabled={!newMessageText.trim() || sending}
+                  className={`p-2.5 rounded-2xl ${editingMessageId ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/25' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/25'} disabled:opacity-50 text-white shadow-md transition-all cursor-pointer`}
+                  title={editingMessageId ? "Save Edit" : "Send message"}
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3 bg-white dark:bg-slate-900 text-slate-400">

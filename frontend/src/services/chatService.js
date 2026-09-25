@@ -27,6 +27,20 @@ export const chatService = {
     return res.data;
   },
 
+  async editMessage(conversationId, messageId, message) {
+    const res = await apiRequest(`/chat/conversations/${conversationId}/messages/${messageId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ message })
+    });
+    return res.data;
+  },
+
+  async deleteMessage(conversationId, messageId) {
+    await apiRequest(`/chat/conversations/${conversationId}/messages/${messageId}`, {
+      method: 'DELETE'
+    });
+  },
+
   async getUnreadCount() {
     const res = await apiRequest('/chat/unread-count');
     return res.data?.unread || 0;

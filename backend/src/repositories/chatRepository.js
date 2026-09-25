@@ -266,11 +266,40 @@ async function getAvailableContacts(currentUserId) {
   return res.rows;
 }
 
+/**
+ * Edit a specific message (checking ownership)
+ */
+async function updateMessage(messageId, userId, newContent) {
+  const query = `
+    UPDATE chat_messages
+    SET message = $1
+    WHERE id = $2 AND sender_id = $3
+    RETURNING id, message, created_at
+  `;
+  const res = await db.query(query, [newContent, messageId, userId]);
+  return res.rows[0] || null;
+}
+
+/**
+ * Delete a specific message (checking ownership)
+ */
+async function deleteMessage(messageId, userId) {
+  const query = `
+    DELETE FROM chat_messages
+    WHERE id = $1 AND sender_id = $2
+    RETURNING id
+  `;
+  const res = await db.query(query, [messageId, userId]);
+  return res.rowCount > 0;
+}
+
 module.exports = {
   findOrCreateConversation,
   getUserConversations,
   getConversationMessages,
   createMessage,
+  updateMessage,
+  deleteMessage,
   getUnreadChatCount,
   getAvailableContacts
 };

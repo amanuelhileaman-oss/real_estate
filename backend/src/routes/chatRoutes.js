@@ -10,6 +10,8 @@ router.get('/conversations', chatController.getConversations);
 router.post('/conversations', chatController.startConversation);
 router.get('/conversations/:id/messages', chatController.getMessages);
 router.post('/conversations/:id/messages', chatController.sendMessage);
+router.put('/conversations/:id/messages/:messageId', chatController.editMessage);
+router.delete('/conversations/:id/messages/:messageId', chatController.deleteMessage);
 router.get('/unread-count', chatController.getUnreadCount);
 router.get('/contacts', chatController.getContacts);
 

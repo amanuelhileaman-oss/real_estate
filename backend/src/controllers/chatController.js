@@ -126,11 +126,47 @@ async function getContacts(req, res, next) {
   }
 }
 
+async function editMessage(req, res, next) {
+  try {
+    const { id: conversationId, messageId } = req.params;
+    const { message } = req.body;
+
+    if (!message || message.trim() === '') {
+      throw new BadRequestError('Message cannot be empty');
+    }
+
+    const updated = await chatRepository.updateMessage(messageId, req.user.id, message);
+    if (!updated) {
+      throw new ForbiddenError('You can only edit your own messages, or message does not exist.');
+    }
+
+    return successResponse(res, updated, 'Message updated successfully');
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function deleteMessage(req, res, next) {
+  try {
+    const { id: conversationId, messageId } = req.params;
+
+    const deleted = await chatRepository.deleteMessage(messageId, req.user.id);
+    if (!deleted) {
+      throw new ForbiddenError('You can only delete your own messages, or message does not exist.');
+    }
+
+    return successResponse(res, null, 'Message deleted successfully');
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getConversations,
   startConversation,
   getMessages,
   sendMessage,
-  getUnreadCount,
-  getContacts
+  getContacts,
+  editMessage,
+  deleteMessage
 };
