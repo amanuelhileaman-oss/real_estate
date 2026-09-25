@@ -150,7 +150,7 @@ async function findProperties({
   if (resolvedQuery && resolvedQuery.trim()) {
     params.push(`%${resolvedQuery.trim()}%`);
     const qIdx = params.length;
-    whereClauses.push(`(p.title ILIKE $${qIdx} OR p.description ILIKE $${qIdx} OR p.street_address ILIKE $${qIdx} OR p.city ILIKE $${qIdx} OR p.subcity_district ILIKE $${qIdx} OR pt.name ILIKE $${qIdx})`);
+    whereClauses.push(`(p.title ILIKE $${qIdx} OR p.description ILIKE $${qIdx} OR p.street_address ILIKE $${qIdx} OR p.city ILIKE $${qIdx} OR p.subcity_district ILIKE $${qIdx} OR pt.name ILIKE $${qIdx} OR u.first_name ILIKE $${qIdx} OR u.last_name ILIKE $${qIdx})`);
   }
 
   // Amenities & Features relational junction filter
@@ -232,6 +232,7 @@ async function findProperties({
     JOIN property_statuses ps ON p.status_id = ps.id
     JOIN property_types pt ON p.property_type_id = pt.id
     JOIN listing_types lt ON p.listing_type_id = lt.id
+    JOIN users u ON p.agent_id = u.id
     ${whereSql}
   `;
   const countRes = await db.query(countSql, params);
@@ -319,6 +320,7 @@ async function findWithinRadius({ lat, lng, radiusKm = 25, limit = 50, type, lis
     JOIN property_statuses ps ON p.status_id = ps.id
     JOIN property_types pt ON p.property_type_id = pt.id
     JOIN listing_types lt ON p.listing_type_id = lt.id
+    LEFT JOIN users u ON p.agent_id = u.id
     LEFT JOIN LATERAL (
       SELECT url FROM property_media WHERE property_id = p.id ORDER BY is_primary DESC, sort_order ASC LIMIT 1
     ) pm ON true
