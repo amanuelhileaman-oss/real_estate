@@ -8,8 +8,8 @@ const { authorizeRoles } = require('../middlewares/roleMiddleware');
 router.use(authenticate);
 
 // Customer endpoints
-router.post('/', authorizeRoles('CUSTOMER', 'ADMIN'), dealController.createDeal);
-router.get('/my-deals', authorizeRoles('CUSTOMER', 'ADMIN'), dealController.getCustomerDeals);
+router.post('/', authorizeRoles('CUSTOMER', 'AGENT', 'ADMIN'), dealController.createDeal);
+router.get('/my-deals', authorizeRoles('CUSTOMER', 'AGENT', 'ADMIN'), dealController.getCustomerDeals);
 
 // Agent endpoints
 router.get('/agent-deals', authorizeRoles('AGENT', 'ADMIN'), dealController.getAgentDeals);
