@@ -459,10 +459,6 @@ export default function ChatPage() {
             <p className="text-xs max-w-sm text-slate-500 dark:text-slate-400">
               Select an existing chat from the left panel, or start a new conversation with an agent or administrator.
             </p>
-            <Button variant="primary" size="sm" onClick={openNewChatModal}>
-              <Plus className="w-4 h-4" />
-              <span>Start New Chat</span>
-            </Button>
           </div>
         )}
       </div>
