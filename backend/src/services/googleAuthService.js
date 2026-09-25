@@ -31,11 +31,12 @@ async function verifyIdToken(token) {
       return ticket.getPayload();
     } else {
       // Otherwise, treat it as an access_token and fetch the user profile directly
-      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${token}` }
+      client.setCredentials({ access_token: token });
+      const response = await client.request({
+        url: 'https://www.googleapis.com/oauth2/v3/userinfo'
       });
-      if (!response.ok) throw new Error('Failed to fetch user info');
-      const data = await response.json();
+      const data = response.data;
+      
       return {
         sub: data.sub,
         email: data.email,
@@ -46,8 +47,10 @@ async function verifyIdToken(token) {
       };
     }
   } catch (error) {
-    console.error('Google Auth Error:', error);
-    throw new Error('Invalid Google credential');
+    console.error('Google Auth Error Details:', error);
+    // Include the actual error message so the user can see what's wrong
+    const { UnauthorizedError } = require('../utils/appError');
+    throw new UnauthorizedError(`Google Auth Failed: ${error.message}`);
   }
 }
 
