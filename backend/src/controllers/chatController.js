@@ -166,6 +166,7 @@ module.exports = {
   startConversation,
   getMessages,
   sendMessage,
+  getUnreadCount,
   getContacts,
   editMessage,
   deleteMessage
