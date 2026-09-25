@@ -21,7 +21,9 @@ export async function apiRequest(endpoint, options = {}) {
   // Use VITE_API_BASE_URL for production (e.g. https://my-backend.onrender.com) 
   // If not set, it defaults to '' (which uses the local Vite proxy in development)
   const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-  const url = `${baseUrl}${endpoint.startsWith('/') ? '/api/v1' + endpoint : '/api/v1/' + endpoint}`;
+  // Ensure baseUrl doesn't have a trailing slash
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+  const url = `${cleanBaseUrl}${endpoint.startsWith('/') ? '/api/v1' + endpoint : '/api/v1/' + endpoint}`;
 
   const headers = {
     ...options.headers
@@ -46,7 +48,7 @@ export async function apiRequest(endpoint, options = {}) {
   if (response.status === 401 && !options._retry && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh-token')) {
     options._retry = true;
     try {
-      const refreshRes = await fetch(`${baseUrl}/api/v1/auth/refresh-token`, {
+      const refreshRes = await fetch(`${cleanBaseUrl}/api/v1/auth/refresh-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
