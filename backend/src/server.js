@@ -29,12 +29,15 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Normalize allowed origins: trim spaces and remove trailing slashes
+      const allowedOrigins = config.CORS_ORIGIN.map(o => o.trim().replace(/\/$/, ''));
+      
       // Allow requests with no origin (like mobile apps, curl, postman) or matching whitelist
-      if (!origin || config.CORS_ORIGIN.includes(origin) || config.CORS_ORIGIN.includes('*')) {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         callback(null, true);
       } else {
         if (config.NODE_ENV === 'production') {
-          callback(new Error('Not allowed by CORS'));
+          callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
         } else {
           callback(null, true); // Permissive in development
         }
